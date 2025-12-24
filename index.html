@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshMart | All-in-One Grocery</title>
+    <style>
+        :root {
+            --primary: #27ae60;
+            --dark: #2c3e50;
+            --light: #f4f4f4;
+            --white: #ffffff;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: var(--light); color: var(--dark); line-height: 1.6; }
+
+        /* Navigation */
+        nav {
+            background: var(--white);
+            padding: 1rem 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .nav-links { display: flex; gap: 20px; list-style: none; }
+        .nav-links li a { 
+            text-decoration: none; 
+            color: var(--dark); 
+            font-weight: 500; 
+            cursor: pointer;
+        }
+        .nav-links li a:hover { color: var(--primary); }
+
+        /* Section Visibility Toggle */
+        .page-section { display: none; padding: 40px 5%; min-height: 80vh; }
+        .page-section.active { display: block; }
+
+        /* Hero Section (Home) */
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), 
+                        url('https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80');
+            background-size: cover;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            border-radius: 10px;
+        }
+
+        /* Product Grid (Shop) */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            text-align: center;
+            padding-bottom: 15px;
+        }
+        .card img { width: 100%; height: 200px; object-fit: cover; }
+        .price { color: var(--primary); font-weight: bold; }
+
+        /* Buttons */
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        /* Cart Sidebar */
+        #cart-sidebar {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 350px;
+            height: 100%;
+            background: white;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.2);
+            transition: 0.3s;
+            padding: 20px;
+            z-index: 1001;
+        }
+        #cart-sidebar.active { right: 0; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div style="font-size: 1.5rem; font-weight: bold; color: var(--primary);">🍃 FreshMart</div>
+        <ul class="nav-links">
+            <li><a onclick="showSection('home')">Home</a></li>
+            <li><a onclick="showSection('shop')">Shop</a></li>
+            <li><a onclick="showSection('about')">About</a></li>
+        </ul>
+        <div class="btn" onclick="toggleCart()">🛒 Cart (<span id="cart-count">0</span>)</div>
+    </nav>
+
+    <section id="home" class="page-section active">
+        <div class="hero">
+            <h1>Welcome to FreshMart</h1>
+            <p>Your daily dose of health, delivered to your doorstep.</p>
+            <button class="btn" onclick="showSection('shop')" style="font-size: 1.1rem; padding: 15px 30px;">Shop Now</button>
+        </div>
+        <div style="margin-top: 40px; text-align: center;">
+            <h2>Why Choose Us?</h2>
+            <div class="grid">
+                <div><h3>Farm Fresh</h3><p>Directly from local growers.</p></div>
+                <div><h3>Fast Delivery</h3><p>Within 2 hours in city limits.</p></div>
+                <div><h3>Eco Friendly</h3><p>Plastic-free packaging.</p></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="shop" class="page-section">
+        <h2>Our Fresh Products</h2>
+        <div class="grid" id="product-grid"></div>
+    </section>
+
+    <section id="about" class="page-section">
+        <h2>About FreshMart</h2>
+        <p style="max-width: 800px; margin: 20px 0;">
+            Founded in 2023, FreshMart started with a simple mission: to make organic groceries accessible to everyone. We partner with over 50 local farmers to ensure you get the best quality produce every single day.
+        </p>
+        <img src="https://images.unsplash.com/photo-1534723452862-4c874018d66d?w=800" alt="Our Store" style="width: 100%; border-radius: 10px; max-height: 400px; object-fit: cover;">
+    </section>
+
+    <div id="cart-sidebar">
+        <h3>Your Cart</h3>
+        <div id="cart-items" style="margin-top: 20px;"></div>
+        <hr>
+        <p style="margin: 20px 0;">Total: $<span id="cart-total">0.00</span></p>
+        <button class="btn" style="width: 100%;" onclick="alert('Checkout Complete!')">Checkout</button>
+        <button class="btn" style="width: 100%; background: #999; margin-top: 10px;" onclick="toggleCart()">Close</button>
+    </div>
+
+    <script>
+        // NAVIGATION LOGIC
+        function showSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.page-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            // Close cart if open when navigating
+            document.getElementById('cart-sidebar').classList.remove('active');
+        }
+
+        // PRODUCT DATA
+        const products = [
+            { id: 1, name: "Red Apples", price: 2.99, img: "https://images.unsplash.com/photo-1560806887-1e4cd0b6bccb?w=400" },
+            { id: 2, name: "Bananas", price: 1.50, img: "https://images.unsplash.com/photo-1603833665858-e61d17a86224?w=400" },
+            { id: 3, name: "Carrots", price: 1.20, img: "https://images.unsplash.com/photo-1598170845058-32b996a66427?w=400" },
+            { id: 4, name: "Fresh Milk", price: 3.50, img: "https://images.unsplash.com/photo-1563636619-e9153da433b5?w=400" }
+        ];
+
+        let cart = [];
+
+        function displayProducts() {
+            const grid = document.getElementById('product-grid');
+            grid.innerHTML = products.map(p => `
+                <div class="card">
+                    <img src="${p.img}" alt="${p.name}">
+                    <h3>${p.name}</h3>
+                    <p class="price">$${p.price.toFixed(2)}</p>
+                    <button class="btn" onclick="addToCart(${p.id})">Add to Cart</button>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            cart.push(product);
+            updateCart();
+        }
+
+        function updateCart() {
+            document.getElementById('cart-count').innerText = cart.length;
+            const cartItems = document.getElementById('cart-items');
+            cartItems.innerHTML = cart.map(item => `<div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <span>${item.name}</span><span>$${item.price.toFixed(2)}</span>
+            </div>`).join('');
+            
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            document.getElementById('cart-total').innerText = total.toFixed(2);
+        }
+
+        function toggleCart() {
+            document.getElementById('cart-sidebar').classList.toggle('active');
+        }
+
+        // Run on load
+        displayProducts();
+    </script>
+</body>
+</html>
